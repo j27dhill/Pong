@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title> Pong </title>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+
+<script>
+	var canvas;
+	var canvasContext;
+	var ballX = 395; //x-axis position of ball
+	var ballY = 295; //y-axis position of ball
+	var playerX = 2;
+	var playerY = 200;
+	const paddleHeight = 100;
+	const paddleWidth = 10;
+	var AIX = 788;
+	var AIY = 220;
+	var showWinScreen = false;
+	var ballSpeedX = 13;
+	var ballSpeedY = 13;
+	var playerScore = 0;
+	var AIScore = 0;
+	const winningScore = 3;
+
+	function calculateMousePos(evt){
+		var rect = canvas.getBoundingClientRect();
+		var root = document.documentElement;
+		var mouseX = evt.clientX - rect.left - root.scrollLeft;
+		var mouseY = evt.clientY - rect.top - root.scrollTop;
+		return{
+			x: mouseX,
+			y: mouseY
+		};
+	}
+	function handleMouseClick(){
+		if (showWinScreen){
+			playerScore = 0;
+			AIScore = 0;
+			showWinScreen = false;
+		}
+	}
+
+	window.onload = function(){
+		canvas = document.getElementById('gameCanvas');
+		canvasContext = canvas.getContext('2d');
+		var framesPerSecond = 30; 
+		setInterval(function(){
+			drawEverything();
+			moveEerything();
+		}, 1000/framesPerSecond); //calls the drawEverything function framePerSecond times every second
+
+		canvas.addEventListener('click', handleMouseClick);
+
+		canvas.addEventListener('mousemove', function(evt){
+			var mousePos = calculateMousePos(evt);
+			playerY = mousePos.y - (paddleHeight/2);
+		})
+		
+	}
+
+	function computerMovement(){
+		var AICenter = AIY + (paddleHeight/2);
+		if (AICenter < ballY){
+			AIY += 10;
+		}
+		else{
+			AIY -= 10;
+		}
+	}
+
+	function drawNet(){
+		for (var i = 0; i < canvas.height; i += 40){
+			colorRect(canvas.width/2 - 1, i, 2, 20, "white");
+		}
+	}
+
+	function drawEverything(){
+		colorRect(0, 0, canvas.width, canvas.height, 'black'); //draw canvas
+
+		if (showWinScreen){
+			if (playerScore > AIScore){
+				canvasContext.fillStyle = "white";
+				canvasContext.fillText("Player won the game!", canvas.width/2 - 50, 200);
+			}
+			else if (AIScore > playerScore){
+				canvasContext.fillStyle = "white";
+				canvasContext.fillText("Computer won the game!", canvas.width/2 - 50, 200);
+			}
+			canvasContext.fillStyle = "white";
+			canvasContext.fillText("Please Click anywhere to continue", canvas.width/2 - 50,canvas.height/2 - 50);
+			return;
+		}
+
+		drawNet();
+
+		colorRect(playerX, playerY, paddleWidth, paddleHeight, 'white'); // draw player
+		colorRect(AIX, AIY, paddleWidth, paddleHeight, 'white'); //draw AI
+		drawCircle(ballX, ballY, 10, 'white'); //draw ball
+		canvasContext.fillText(playerScore, 300,100); //player score
+		canvasContext.fillText(AIScore, 500,100); //AI score
+	}
+	
+	function colorRect(leftX, topY, width, height, color){
+		canvasContext.fillStyle = color;
+		canvasContext.fillRect(leftX, topY, width, height);
+	}
+
+	function drawCircle(centerX, centerY, radius, color){
+		canvasContext.fillStyle = color;
+		canvasContext.beginPath();
+		canvasContext.arc(centerX, centerY, radius, 0, Math.PI*2, true);
+		canvasContext.fill(); //ball	
+	}
+
+	function ballReset(){
+		if (playerScore >= winningScore || AIScore >= winningScore){
+			showWinScreen = true;
+		}
+
+		ballX = canvas.width/2;
+		ballY = canvas.height/2;
+	}
+
+	function moveEerything(){
+		computerMovement();
+
+		ballX += ballSpeedX;
+		ballY += ballSpeedY;
+
+		if (ballX > canvas.width){
+			if (ballY > AIY && ballY < AIY + paddleHeight){
+				ballSpeedX = -ballSpeedX;
+				var deltaY = ballY - (AIY + paddleHeight/2);
+				ballSpeedY = deltaY * 0.35;
+			}
+			else{
+				playerScore++;
+				ballReset();
+				ballSpeedX = -ballSpeedX;
+			}
+		}
+		if (ballX < 0){
+			if (ballY > playerY && ballY < playerY + paddleHeight){
+				ballSpeedX = -ballSpeedX;
+
+				var deltaY = ballY - (playerY + paddleHeight/2);
+				ballSpeedY = deltaY * 0.35;
+			}
+			else{
+				AIScore++;
+				ballReset();
+				ballSpeedX = -ballSpeedX;
+			}
+		}
+		if (ballY > canvas.height){
+			ballSpeedY = -ballSpeedY;
+		}
+		if (ballY < 0){
+			ballSpeedY = -ballSpeedY;
+		}
+
+	}
+	
+</script>
+
+
+</body>
+</html>
